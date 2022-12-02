@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  email          String    @unique
+  password       String
+  name           String
+  role           Role      @default(VISITOR)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  Token          Token[]
+  cityId         Int?
+  city           City?     @relation(fields: [cityId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  bookings       Booking[] @relation("user")
+  agent_bookings Booking[] @relation("guide")
+
+  rated   Rating[] @relation("rated_by")
+  ratings Rating[] @relation("rated_to")
+
+  complaints Report[] @relation("reported_by")
+  reports    Report[] @relation("reported_to")
+
+
+}
+
+model Token {
+  id     Int    @id @default(autoincrement())
+  userId Int
+  token  String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+}
+
+model City {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  Place     Place[]
+  User      User[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  bookings  Booking[]
+  events Event[]
+}
+
+model Event {
+  id String @id @default(uuid())
+  title String
+  date DateTime @db.Date
+  cityId Int
+  city City @relation(fields: [cityId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model Rating {
+  id      String @id @default(uuid())
+  userId  Int
+  guideId Int
+  user    User   @relation(name: "rated_by", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  guide   User   @relation(name: "rated_to", fields: [guideId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  stars   Int
+
+   @@unique([userId,guideId])
+}
+
+model Report {
+  id          String @id @default(uuid())
+  userId      Int
+  guideId     Int
+  user        User   @relation(name: "reported_by", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  guide       User   @relation(name: "reported_to", fields: [guideId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  description String @db.Text
+
+  @@unique([userId,guideId])
+}
+
+model Booking {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  guideId       Int?
+  cityId        Int
+  mobile        String?
+  date          DateTime    @db.Date
+  bookingPlanId String
+  user          User        @relation(name: "user", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  guide         User?       @relation(name: "guide", fields: [guideId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  city          City        @relation(fields: [cityId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  plan          BookingPlan @relation(fields: [bookingPlanId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  khalti_token  String
+}
+
+model BookingPlan {
+  id       String    @id @default(uuid())
+  name     String
+  days     Int
+  price    Int
+  bookings Booking[]
+}
+
+model Place {
+  id         Int          @id @default(autoincrement())
+  name       String
+  cityId     Int
+  featured   Boolean      @default(false)
+  city       City         @relation(fields: [cityId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  experience Experience[]
+  image      Image[]
+}
+
+model Image {
+  id      Int    @id @default(autoincrement())
+  src     String
+  placeId Int
+  place   Place  @relation(fields: [placeId], references: [id], onUpdate: NoAction, onDelete: Cascade)
+}
+
+model Experience {
+  id    Int     @id @default(autoincrement())
+  type  String
+  place Place[]
+}
+
+enum Role {
+  VISITOR
+  GUIDE
+  ADMIN
+}

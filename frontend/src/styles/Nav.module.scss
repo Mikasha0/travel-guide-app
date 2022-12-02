@@ -1,0 +1,26 @@
+.container{
+    height: var(--nav-height);
+    background-color: rgb(36, 36, 36);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.navlinks{
+    height: 100%;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    list-style: none;
+}
+
+.navlinks a{
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    text-transform: capitalize;
+}
+
+.navlinks a:hover{
+    text-transform: uppercase;
+}
